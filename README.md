@@ -1,64 +1,80 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
+# Simple Eve Industry API
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+This API returns basic information about Eve Online's industry blueprints. The main use is as a quick reference to see material input requirements and an estimated base cost for materials as well as the base value of the final product. Base prices are from CCP's static database, so will vary in the in-game marketplace.
 
-## About Laravel
+## Installation
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+This project is built with Laravel (https://laravel.com) and uses the SQLite conversion of the Eve static database provded by Fuzzwork (https://www.fuzzwork.co.uk/dump/) so you will need PHP 7.3+ with the SQLite driver and Composer. After cloning, just run composter install, download the latest eve.db.bz2 from Fuzzwork (https://www.fuzzwork.co.uk/dump/latest/eve.db.bz2) and extract it to the storage/app directory, copy the .env.example file to .env and set your database to use the eve.db file (see below).
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+```
+    DB_CONNECTION=sqlite
+    DB_DATABASE=/absolute/path/to/eveapi/storage/app/eve.db #replace with the absolute path to your local repo
+    DB_FOREIGN_KEYS=true
+```
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+For info and general troubleshooting of the Laravel install, try the [Laravel Docs](https://laravel.com/docs/9.x)
 
-## Learning Laravel
+Running `php artisan test` after installation will verify all endpoints are funcitoning correctly.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Usage
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 1500 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+This project has 3 api endpoints:
 
-## Laravel Sponsors
+-   /api/blueprints #returns json of all blueprints with details, paginated
+-   /api/blueprints/{blueprint} #uses the typeID key from the industryBlueprints table, returns json with details of a single blueprint
+-   /api/blueprints/search/{keyword} #searches against blueprint name using `LIKE %keyword%` and returns paginated JSON with all matches
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+The /api/blueprints endpoint accepts an optional limit get variable e.g. /api/blueprints?limit=5. If not provided or not a valid number, it defaults to 10 results per page. All endpionts return results formatted as below:
 
-### Premium Partners
+```
+{
+"data": {
+    "id": 785,
+    "name": "Miner I Blueprint",
+    "product": "Miner I",
+    "materials": [
+        {
+        "id": 34,
+        "name": "Tritanium",
+        "quantity": "1324",
+        "baseprice": "2"
+        },
+        {
+        "id": 35,
+        "name": "Pyerite",
+        "quantity": "481",
+        "baseprice": "8"
+        },
+        {
+        "id": 36,
+        "name": "Mexallon",
+        "quantity": "119",
+        "baseprice": "32"
+        }
+    ],
+    "basecost": 10304,
+    "basevalue": null,
+    "baseprofit": -10304
+    }
+}
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+## To-do
 
-## Contributing
+-   add more data to the returns: production time, invention info, etc.
+-   integrate CCP's live API for in-game market data to provide more accurate cost/profit info
+-   set up auth and post endpoints to allow users to save info, eg. inventory, favorite blueprints, shopping lists, etc.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Resources
 
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+-   [Eve Online](https://www.eveonline.com/)
+-   [Laravel](https://laravel.com)
+-   [Fuzzwork](https://www.fuzzwork.co.uk/)
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This work is licensed under the GNU General Public License v3.0
+
+## CCP Copyright Notice
+
+EVE Online, the EVE logo, EVE and all associated logos and designs are the intellectual property of CCP hf. All artwork, screenshots, characters, vehicles, storylines, world facts or other recognizable features of the intellectual property relating to these trademarks are likewise the intellectual property of CCP hf. EVE Online and the EVE logo are the registered trademarks of CCP hf. All rights are reserved worldwide. All other trademarks are the property of their respective owners. CCP hf. has granted permission to pyfa to use EVE Online and all associated logos and designs for promotional and information purposes on its website but does not endorse, and is not in any way affiliated with, pyfa. CCP is in no way responsible for the content on or functioning of this program, nor can it be liable for any damage arising from the use of this program.
